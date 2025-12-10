@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery - kkpottery</title>
+  <link rel="icon" type="image/jpg" href="assets/images/logo.jpg">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <style>
+    /* Lightbox styles */
+    .lightbox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .lightbox img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+
+    .lightbox.active {
+      display: flex;
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .gallery {
+      padding: var(--space-4);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .gallery h2 {
+      text-align: center;
+      margin-bottom: var(--space-4);
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      color: var(--fg);
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: var(--space-3);
+      padding: var(--space-2);
+    }
+
+    .gallery-item {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      aspect-ratio: 1;
+      background: #f8f9fa;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1);
+      transition: transform 0.5s ease;
+    }
+
+    .gallery-item:hover img {
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+      .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html" class="logo-container">
+      <img src="assets/images/logo.jpg" alt="kkpottery logo" class="logo-pic">
+      <h1>kkpottery</h1>
+    </a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="gallery.html" aria-current="page">Gallery</a>
+    </div>
+  </nav>
+
+  <main class="gallery">
+    <div class="gallery-grid" id="galleryGrid">
+      <!-- Images will be loaded here by JavaScript -->
+    </div>
+  </main>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox">
+    <img id="lightboxImage" src="" alt="Enlarged view">
+  </div>
+
+  <script>
+    // Close lightbox when clicking outside the image
+    document.getElementById('lightbox').addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.remove('active');
+      }
+    });
+
+    // Close lightbox with Escape key
+    document.addEventListener('keydown', function(e) {
+      const lightbox = document.getElementById('lightbox');
+      if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+        lightbox.classList.remove('active');
+      }
+    });
+    // This script will load images from the assets/images/gallery/ directory
+    document.addEventListener('DOMContentLoaded', function() {
+      const galleryGrid = document.getElementById('galleryGrid');
+      
+      // Create an array of image filenames (you'll need to add your actual image filenames here)
+      const imageFilenames = [
+        "IMG_4508.jpg", "IMG_4680.jpg", "IMG_4717.jpg", "IMG_4743.jpg", "IMG_4775.jpg", "IMG_4801.jpg", "IMG_4543.jpg", "IMG_4596.jpg", "IMG_4684.jpg", "IMG_4720.jpg", "IMG_4752.jpg", "IMG_4581.jpg","IMG_4784.jpg", "IMG_4551.jpg", "IMG_4629.jpg", "IMG_4686.jpg", "IMG_4727.jpg", "IMG_4761.jpg", "IMG_4785.jpg", "IMG_4553.jpg", "IMG_4641.jpg", "IMG_4688.jpg", "IMG_4729.jpg", "IMG_4767.jpg", "IMG_4786.jpg", "IMG_4797.jpg","IMG_4557.jpg", "IMG_4663.jpg", "IMG_4701.jpg", "IMG_4737.jpg", "IMG_4769.jpg","IMG_4796.jpg"
+        // Add more filenames as needed
+      ];
+
+      // Create gallery items for each image
+      imageFilenames.forEach(filename => {
+        const item = document.createElement('div');
+        item.className = 'gallery-item';
+        
+        const img = document.createElement('img');
+        img.src = `assets/images/gallery/${filename}`;
+        img.alt = 'Pottery artwork';
+        img.loading = 'lazy';
+        
+        // Add click event to show image in lightbox
+        img.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const lightbox = document.getElementById('lightbox');
+          const lightboxImg = document.getElementById('lightboxImage');
+          lightboxImg.src = img.src;
+          lightbox.classList.add('active');
+        });
+        
+        item.appendChild(img);
+        galleryGrid.appendChild(item);
+      });
+    });
+  </script>
+</body>
+</html>

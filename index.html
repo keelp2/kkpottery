@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kkpottery</title>
+  <link rel="icon" type="image/jpg" href="assets/images/logo.jpg">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <nav>
+    <a href="index.html" class="logo-container">
+      <img src="assets/images/logo.jpg" alt="kkpottery logo" class="logo-pic">
+      <h1>kkpottery</h1>
+    </a>
+    <div class="nav-links">
+      <a href="index.html" aria-current="page">Home</a>
+      <a href="gallery.html">Gallery</a>
+    </div>
+  </nav>
+  <main class="artist-container">
+    <div class="artist-bio">
+      <p>I have been exploring clay for many years, gradually moving from casual interest to a deeper commitment. Since joining the NCC studio community in October, I've focused my practice on high-fire stoneware. My functional pieces seek a balance between architectural precision and the natural spontaneity, gesture, and chance that emerge through clay processes.</p>
+      
+      <div class="contact-section">
+        <h3>Interested in my work?</h3>
+        <p>Feel free to reach out for commissions or available pieces.</p>
+        <div class="contact-actions">
+          <button type="button" class="contact-button" id="contactButton">Contact Me</button>
+          <div class="social-links">
+            <a href="https://www.instagram.com/kk_pottery/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <img src="assets/images/insta.png" alt="Instagram">
+            </a>
+            <a href="https://northernclaycenter.org/2023/05/03/karl-keel/" target="_blank" rel="noopener noreferrer" aria-label="NCC">
+              <img src="assets/images/ncc.png" alt="NCC">
+            </a>
+            <a href="https://www.linkedin.com/in/karl-keel-50206b48/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+              <img src="assets/images/linkedin.png" alt="LinkedIn">
+            </a>
+            <a href="mailto:karlkeel1@comcast.net" aria-label="Email">
+              <img src="assets/images/email.png" alt="Email">
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="artist-image">
+      <img src="assets/images/profile.jpg" alt="Artist at work" class="artist-photo">
+    </div>
+  </main>
+
+  <!-- Contact Form Modal -->
+  <div id="contactModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>Get in Touch</h3>
+      <form id="contactForm" class="contact-form" action="https://formspree.io/f/mjknawee" method="POST">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" minlength="2" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="5" minlength="10" required></textarea>
+        </div>
+        <!-- Honeypot field to prevent spam -->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true">
+          <input type="text" name="_gotcha" tabindex="-1">
+        </div>
+        <button type="submit" class="submit-button">Send Message</button>
+      </form>
+      <div id="formMessage" class="form-message"></div>
+    </div>
+  </div>
+
+  <script>
+    // Get the modal
+    const modal = document.getElementById('contactModal');
+    const btn = document.getElementById('contactButton');
+    const span = document.getElementsByClassName('close')[0];
+    const contactForm = document.getElementById('contactForm');
+    const formMessage = document.getElementById('formMessage');
+
+    // When the user clicks the button, open the modal 
+    btn.onclick = function() {
+      modal.style.display = 'block';
+      document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+    }
+
+    // When the user clicks on (x), close the modal
+    span.onclick = function() {
+      resetForm();
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        resetForm();
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }
+    }
+
+    // Reset form and messages
+    function resetForm() {
+      formMessage.textContent = '';
+      formMessage.className = 'form-message';
+      contactForm.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+    }
+
+    // Form validation
+    function validateForm() {
+      let isValid = true;
+      const name = contactForm.querySelector('#name');
+      const email = contactForm.querySelector('#email');
+      const message = contactForm.querySelector('#message');
+
+      // Reset previous errors
+      [name, email, message].forEach(field => {
+        field.classList.remove('error');
+        const errorMsg = field.nextElementSibling;
+        if (errorMsg && errorMsg.classList.contains('error-message')) {
+          errorMsg.remove();
+        }
+      });
+
+      // Validate name
+      if (name.value.trim().length < 2) {
+        showError(name, 'Please enter your name (at least 2 characters)');
+        isValid = false;
+      }
+
+      // Validate email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.value.trim())) {
+        showError(email, 'Please enter a valid email address');
+        isValid = false;
+      }
+
+      // Validate message
+      if (message.value.trim().length < 10) {
+        showError(message, 'Please enter a message (at least 10 characters)');
+        isValid = false;
+      }
+
+      return isValid;
+    }
+
+    function showError(field, message) {
+      field.classList.add('error');
+      const errorMsg = document.createElement('div');
+      errorMsg.className = 'error-message';
+      errorMsg.textContent = message;
+      field.parentNode.insertBefore(errorMsg, field.nextSibling);
+    }
+
+    // Form submission
+    contactForm.onsubmit = async function(e) {
+      e.preventDefault();
+      
+      if (!validateForm()) return;
+      
+      const formData = new FormData(contactForm);
+      const submitButton = contactForm.querySelector('button[type="submit"]');
+      
+      try {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Sending...';
+        
+        // Submit to Formspree
+        const response = await fetch(contactForm.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          // Show success message
+          formMessage.textContent = 'Message sent successfully! I\'ll get back to you soon.';
+          formMessage.className = 'form-message success';
+          contactForm.reset();
+          
+          // Hide the message after 5 seconds
+          setTimeout(() => {
+            formMessage.textContent = '';
+            formMessage.className = 'form-message';
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+          }, 5000);
+        } else {
+          throw new Error('Form submission failed');
+        }
+        
+      } catch (error) {
+        console.error('Error:', error);
+        formMessage.textContent = 'Error sending message. Please try again or email me directly at karlkeel1@comcast.net';
+        formMessage.className = 'form-message error';
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Send Message';
+      }
+    };
+  </script>
+</body>
+</html>
