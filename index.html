@@ -6,6 +6,38 @@
   <title>kkpottery</title>
   <link rel="icon" type="image/jpg" href="assets/images/logo.jpg">
   <link rel="stylesheet" href="assets/css/styles.css">
+  <style>
+    /* Lightbox styles */
+    .lightbox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .lightbox img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+
+    .lightbox.active {
+      display: flex;
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
 </head>
 <body>
   <nav>
@@ -20,6 +52,7 @@
   </nav>
   <main class="artist-container">
     <div class="artist-bio">
+      <h2>Karl Keel</h2>
       <p>I have been exploring clay for many years, gradually moving from casual interest to a deeper commitment. Since joining the NCC studio community in October, I've focused my practice on high-fire stoneware. My functional pieces seek a balance between architectural precision and the natural spontaneity, gesture, and chance that emerge through clay processes.</p>
       
       <div class="contact-section">
@@ -50,6 +83,45 @@
     </div>
   </main>
 
+  <section class="featured-work">
+    <h2>Featured Work</h2>
+    <div class="pottery-grid">
+      <div class="pottery-item">
+        <div class="pottery-image-link">
+          <img src="assets/images/featured_work/IMG_1869.jpg" alt="Stone Tea Kettle - 2020">
+        </div>
+        <div class="pottery-info">
+          <h3>Stone Tea Kettle</h3>
+          <p>2020</p>
+        </div>
+      </div>
+      <div class="pottery-item">
+        <div class="pottery-image-link">
+          <img src="assets/images/featured_work/IMG_9735.PNG" alt="Spotted Vase - 2024">
+        </div>
+        <div class="pottery-info">
+          <h3>Spotted Vase</h3>
+          <p>2024</p>
+        </div>
+      </div>
+      <div class="pottery-item">
+        <div class="pottery-image-link">
+          <img src="assets/images/featured_work/IMG_9736.PNG" alt="Salad Bowl - 2023">
+        </div>
+        <div class="pottery-info">
+          <h3>Salad Bowl</h3>
+          <p>2023</p>
+        </div>
+      </div>
+    </div>
+    <a href="gallery.html" class="view-more">View Full Gallery →</a>
+  </section>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox">
+    <img id="lightboxImage" src="" alt="Enlarged view">
+  </div>
+
   <!-- Contact Form Modal -->
   <div id="contactModal" class="modal">
     <div class="modal-content">
@@ -79,6 +151,36 @@
   </div>
 
   <script>
+    // Lightbox functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImg = document.getElementById('lightboxImage');
+      
+      // Close lightbox when clicking outside the image
+      lightbox.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.classList.remove('active');
+        }
+      });
+
+      // Close lightbox with Escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+          lightbox.classList.remove('active');
+        }
+      });
+
+      // Add click handlers to all featured images
+      document.querySelectorAll('.pottery-item img').forEach(img => {
+        img.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          lightboxImg.src = this.src;
+          lightbox.classList.add('active');
+        });
+      });
+    });
+
     // Get the modal
     const modal = document.getElementById('contactModal');
     const btn = document.getElementById('contactButton');
