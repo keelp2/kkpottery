@@ -581,10 +581,11 @@ nav {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 300px;
+  height: 300px;  /* Fixed height */
   padding: 1.5rem;
   background-color: #fff;
   overflow: hidden;
+  position: relative; /* Add this */
 }
 
 .pottery-item img {
@@ -592,16 +593,16 @@ nav {
   max-height: 100%;
   width: auto;
   height: auto;
-  object-fit: contain;
-  transition: transform 0.5s ease;
-  cursor: pointer;
-  transform: scale(0.9);
-  display: block;
-  margin: 0 auto;
+  object-fit: contain;  /* This ensures aspect ratio is maintained */
+  position: absolute;   /* Add this */
+  top: 50%;             /* Add this */
+  left: 50%;            /* Add this */
+  transform: translate(-50%, -50%) scale(0.9); /* Update this */
+  transition: transform 0.3s ease;
 }
 
 .pottery-item:hover img {
-  transform: scale(1.03);
+  transform: translate(-50%, -50%) scale(1.03); /* Update this */
 }
 
 .pottery-info {
