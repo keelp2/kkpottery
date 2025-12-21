@@ -77,11 +77,15 @@
     }
 
     /* Featured image at the top */
-    .gallery-item.featured {
-      grid-column: 1 / -1;
-      max-height: 60vh;
-      margin-bottom: 20px;
+
+    .gallery-item.featured img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center; /* this is the key */
+      display: block;
     }
+
 
     .gallery-item:hover {
       transform: translateY(-3px);
