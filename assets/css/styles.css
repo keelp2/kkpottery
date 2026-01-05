@@ -36,6 +36,84 @@ body {
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap');
 
+/* Featured Banner */
+.featured-banner {
+  background-color: #fafafa;
+  color: var(--muted);
+  text-align: center;
+  padding: 20px 24px;
+  font-size: 1.05rem;
+  font-family: var(--font-body);
+  position: relative;
+  margin: 0 auto;
+  max-width: 1200px;
+  border-radius: 6px;
+  margin-top: var(--space-3);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  background: linear-gradient(to right, rgba(0,0,0,0.01) 0%, rgba(0,0,0,0.015) 50%, rgba(0,0,0,0.01) 100%);
+}
+
+.featured-banner a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.25s ease;
+  position: relative;
+  padding: 4px 6px;
+  margin: 0 -2px;
+  border-radius: 4px;
+}
+
+.featured-banner a::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  bottom: 2px;
+  left: 0;
+  background-color: var(--accent);
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.3s ease-out;
+}
+
+.featured-banner a:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+.featured-banner a:hover {
+  color: var(--accent-hover);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.banner-arrow {
+  margin-left: 8px;
+  display: inline-block;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.featured-banner:hover .banner-arrow {
+  transform: translateX(6px);
+}
+
+.banner-text {
+  color: var(--muted);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.featured-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}
+
 /* Navigation */
 nav {
   display: flex;
