@@ -3,41 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>kkpottery</title>
+  <title>K² Pottery - Karl Keel Ceramic Art | Handcrafted Stoneware Pottery</title>
+  <meta name="description" content="Karl Keel creates functional high-fire stoneware pottery at Northern Clay Center. Explore handcrafted ceramic art balancing architectural precision with natural clay processes.">
+  <meta name="keywords" content="pottery, ceramics, stoneware, handcrafted pottery, karl keel, northern clay center, functional pottery, ceramic art, minnesota pottery">
+  <meta name="author" content="Karl Keel">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kkpottery.com/">
+  <meta property="og:title" content="K² Pottery - Karl Keel Ceramic Art">
+  <meta property="og:description" content="Karl Keel creates functional high-fire stoneware pottery at Northern Clay Center. Explore handcrafted ceramic art.">
+  <meta property="og:image" content="https://kkpottery.com/assets/images/logo.jpg">
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://kkpottery.com/">
+  <meta property="twitter:title" content="K² Pottery - Karl Keel Ceramic Art">
+  <meta property="twitter:description" content="Karl Keel creates functional high-fire stoneware pottery at Northern Clay Center.">
+  <meta property="twitter:image" content="https://kkpottery.com/assets/images/logo.jpg">
+  
   <link rel="icon" type="image/jpg" href="assets/images/logo.jpg">
+  <link rel="canonical" href="https://kkpottery.com/">
   <link rel="stylesheet" href="assets/css/styles.css">
-  <style>
-    /* Lightbox styles */
-    .lightbox {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.9);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-    }
-
-    .lightbox img {
-      max-width: 90%;
-      max-height: 90%;
-      object-fit: contain;
-    }
-
-    .lightbox.active {
-      display: flex;
-      animation: fadeIn 0.3s;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-  </style>
 </head>
 <body>
   <nav>
@@ -151,167 +139,6 @@
     </div>
   </div>
 
-  <script>
-    // Lightbox functionality
-    document.addEventListener('DOMContentLoaded', function() {
-      const lightbox = document.getElementById('lightbox');
-      const lightboxImg = document.getElementById('lightboxImage');
-      
-      // Close lightbox when clicking outside the image
-      lightbox.addEventListener('click', function(e) {
-        if (e.target === this) {
-          this.classList.remove('active');
-        }
-      });
-
-      // Close lightbox with Escape key
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && lightbox.classList.contains('active')) {
-          lightbox.classList.remove('active');
-        }
-      });
-
-      // Add click handlers to all featured images
-      document.querySelectorAll('.pottery-item img').forEach(img => {
-        img.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          lightboxImg.src = this.src;
-          lightbox.classList.add('active');
-        });
-      });
-    });
-
-    // Get the modal
-    const modal = document.getElementById('contactModal');
-    const btn = document.getElementById('contactButton');
-    const span = document.getElementsByClassName('close')[0];
-    const contactForm = document.getElementById('contactForm');
-    const formMessage = document.getElementById('formMessage');
-
-    // When the user clicks the button, open the modal 
-    btn.onclick = function() {
-      modal.style.display = 'block';
-      document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
-    }
-
-    // When the user clicks on (x), close the modal
-    span.onclick = function() {
-      resetForm();
-      modal.style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }
-
-    // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function(event) {
-      if (event.target == modal) {
-        resetForm();
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-      }
-    }
-
-    // Reset form and messages
-    function resetForm() {
-      formMessage.textContent = '';
-      formMessage.className = 'form-message';
-      contactForm.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
-    }
-
-    // Form validation
-    function validateForm() {
-      let isValid = true;
-      const name = contactForm.querySelector('#name');
-      const email = contactForm.querySelector('#email');
-      const message = contactForm.querySelector('#message');
-
-      // Reset previous errors
-      [name, email, message].forEach(field => {
-        field.classList.remove('error');
-        const errorMsg = field.nextElementSibling;
-        if (errorMsg && errorMsg.classList.contains('error-message')) {
-          errorMsg.remove();
-        }
-      });
-
-      // Validate name
-      if (name.value.trim().length < 2) {
-        showError(name, 'Please enter your name (at least 2 characters)');
-        isValid = false;
-      }
-
-      // Validate email
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email.value.trim())) {
-        showError(email, 'Please enter a valid email address');
-        isValid = false;
-      }
-
-      // Validate message
-      if (message.value.trim().length < 10) {
-        showError(message, 'Please enter a message (at least 10 characters)');
-        isValid = false;
-      }
-
-      return isValid;
-    }
-
-    function showError(field, message) {
-      field.classList.add('error');
-      const errorMsg = document.createElement('div');
-      errorMsg.className = 'error-message';
-      errorMsg.textContent = message;
-      field.parentNode.insertBefore(errorMsg, field.nextSibling);
-    }
-
-    // Form submission
-    contactForm.onsubmit = async function(e) {
-      e.preventDefault();
-      
-      if (!validateForm()) return;
-      
-      const formData = new FormData(contactForm);
-      const submitButton = contactForm.querySelector('button[type="submit"]');
-      
-      try {
-        submitButton.disabled = true;
-        submitButton.textContent = 'Sending...';
-        
-        // Submit to Formspree
-        const response = await fetch(contactForm.action, {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          // Show success message
-          formMessage.textContent = 'Message sent successfully! I\'ll get back to you soon.';
-          formMessage.className = 'form-message success';
-          contactForm.reset();
-          
-          // Hide the message after 5 seconds
-          setTimeout(() => {
-            formMessage.textContent = '';
-            formMessage.className = 'form-message';
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-          }, 5000);
-        } else {
-          throw new Error('Form submission failed');
-        }
-        
-      } catch (error) {
-        console.error('Error:', error);
-        formMessage.textContent = 'Error sending message. Please try again or email me directly at karlkeel1@comcast.net';
-        formMessage.className = 'form-message error';
-      } finally {
-        submitButton.disabled = false;
-        submitButton.textContent = 'Send Message';
-      }
-    };
-  </script>
+  <script src="assets/js/main.js"></script>
 </body>
 </html>
