@@ -337,7 +337,7 @@ class GalleryPagination {
       item.className = `gallery-item ${image.type}`;
       
       const img = document.createElement('img');
-      img.src = `assets/images/gallery/${image.src}`;
+      img.src = `assets/images/gallery/${image.src}?v=3`;
       img.alt = 'Pottery artwork';
       img.loading = 'lazy';
       
