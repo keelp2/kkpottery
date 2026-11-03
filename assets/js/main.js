@@ -1,452 +1,255 @@
-// Main JavaScript file for KK Pottery website
+// Karl Keel Pottery — site behaviour
+// Lightbox (with prev/next, keyboard and swipe), contact dialog, small polish.
 
-// Utility functions
-const $ = (selector) => document.querySelector(selector);
-const $$ = (selector) => document.querySelectorAll(selector);
+document.documentElement.classList.add('js');
 
-// Lightbox functionality
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input, textarea, [tabindex]:not([tabindex="-1"])';
+
+// Keep keyboard focus inside an open overlay.
+function trapFocus(container, e) {
+  if (e.key !== 'Tab') return;
+  const items = $$(FOCUSABLE, container).filter(el => el.offsetParent !== null);
+  if (!items.length) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
+
+/* ------------------------------------------------------------------------ */
+/* Lightbox                                                                  */
+/* ------------------------------------------------------------------------ */
 class Lightbox {
-  constructor() {
-    this.lightbox = $('#lightbox');
-    this.lightboxImg = $('#lightboxImage');
-    this.init();
-  }
+  constructor(el) {
+    this.el = el;
+    this.img = $('#lightboxImage', el);
+    this.caption = $('#lightboxCaption', el);
+    this.prevBtn = $('.lb-prev', el);
+    this.nextBtn = $('.lb-next', el);
+    this.triggers = $$('[data-full]');
+    this.index = 0;
+    this.lastFocus = null;
+    if (!this.triggers.length) return;
 
-  init() {
-    if (!this.lightbox) return;
+    this.triggers.forEach((t, i) => t.addEventListener('click', () => this.open(i)));
+    $('.lb-close', el).addEventListener('click', () => this.close());
+    this.prevBtn.addEventListener('click', () => this.go(-1));
+    this.nextBtn.addEventListener('click', () => this.go(1));
 
-    // Close lightbox when clicking outside the image
-    this.lightbox.addEventListener('click', (e) => {
-      if (e.target === this.lightbox) {
-        this.close();
-      }
+    el.addEventListener('click', e => {
+      if (e.target === el || e.target.tagName === 'FIGURE') this.close();
     });
 
-    // Close lightbox with Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.lightbox.classList.contains('active')) {
-        this.close();
-      }
+    document.addEventListener('keydown', e => {
+      if (!this.isOpen()) return;
+      if (e.key === 'Escape') this.close();
+      else if (e.key === 'ArrowLeft') this.go(-1);
+      else if (e.key === 'ArrowRight') this.go(1);
+      else trapFocus(el, e);
     });
 
-    // Add click handlers to all images with lightbox capability
-    this.addImageHandlers();
-  }
-
-  addImageHandlers() {
-    // Featured work images
-    $$('.pottery-item img').forEach(img => {
-      img.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.open(img.src);
-      });
-    });
-
-    // Gallery images
-    $$('.gallery-item img').forEach(img => {
-      img.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.open(img.src);
-      });
+    // Swipe left/right on touch screens.
+    let x0 = null;
+    el.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+    el.addEventListener('touchend', e => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 50) this.go(dx < 0 ? 1 : -1);
+      x0 = null;
     });
   }
 
-  open(src) {
-    if (this.lightboxImg) {
-      this.lightboxImg.src = src;
-      this.lightbox.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
+  isOpen() { return this.el.classList.contains('active'); }
+
+  open(i) {
+    this.lastFocus = document.activeElement;
+    this.el.classList.add('active');
+    this.el.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('no-scroll');
+    this.show(i);
+    $('.lb-close', this.el).focus();
   }
 
   close() {
-    this.lightbox.classList.remove('active');
-    document.body.style.overflow = 'auto';
+    this.el.classList.remove('active');
+    this.el.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('no-scroll');
+    this.img.removeAttribute('src');
+    if (this.lastFocus) this.lastFocus.focus();
+  }
+
+  go(step) {
+    const n = this.triggers.length;
+    if (n < 2) return;
+    this.show((this.index + step + n) % n);
+  }
+
+  show(i) {
+    this.index = i;
+    const t = this.triggers[i];
+    const thumb = $('img', t);
+    const n = this.triggers.length;
+
+    this.img.src = t.dataset.full;
+    this.img.alt = thumb ? thumb.alt : '';
+
+    const title = t.dataset.title;
+    this.caption.innerHTML = '';
+    if (title) {
+      const strong = document.createElement('strong');
+      strong.textContent = title;
+      this.caption.append(strong, t.dataset.year || '');
+    } else {
+      this.caption.textContent = `${i + 1} / ${n}`;
+    }
+
+    const multi = n > 1;
+    this.prevBtn.hidden = !multi;
+    this.nextBtn.hidden = !multi;
+
+    // Preload neighbours so stepping through feels instant.
+    if (multi) {
+      [1, -1].forEach(d => { new Image().src = this.triggers[(i + d + n) % n].dataset.full; });
+    }
   }
 }
 
-// Contact form functionality
+/* ------------------------------------------------------------------------ */
+/* Contact dialog                                                            */
+/* ------------------------------------------------------------------------ */
 class ContactForm {
   constructor() {
     this.modal = $('#contactModal');
-    this.button = $('#contactButton');
-    this.closeBtn = $('.close');
     this.form = $('#contactForm');
-    this.formMessage = $('#formMessage');
-    this.init();
-  }
+    this.message = $('#formMessage');
+    this.lastFocus = null;
+    if (!this.modal) return;
 
-  init() {
-    if (!this.modal || !this.button) return;
-
-    // Open modal
-    this.button.addEventListener('click', () => this.open());
-
-    // Close modal events
-    if (this.closeBtn) {
-      this.closeBtn.addEventListener('click', () => this.close());
-    }
-
-    // Close when clicking outside
-    window.addEventListener('click', (e) => {
-      if (e.target === this.modal) {
-        this.close();
-      }
+    $$('[data-open-contact]').forEach(b => b.addEventListener('click', () => this.open()));
+    $('.close', this.modal).addEventListener('click', () => this.close());
+    this.modal.addEventListener('click', e => { if (e.target === this.modal) this.close(); });
+    document.addEventListener('keydown', e => {
+      if (!this.modal.classList.contains('active')) return;
+      if (e.key === 'Escape') this.close();
+      else trapFocus(this.modal, e);
     });
-
-    // Form submission
-    if (this.form) {
-      this.form.addEventListener('submit', (e) => this.handleSubmit(e));
-    }
+    this.form.addEventListener('submit', e => this.submit(e));
   }
 
   open() {
-    this.modal.style.display = 'block';
-    document.body.style.overflow = 'hidden';
+    this.lastFocus = document.activeElement;
+    this.modal.classList.add('active');
+    this.modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('no-scroll');
+    setTimeout(() => $('#name', this.form).focus(), 50);
   }
 
   close() {
-    this.resetForm();
-    this.modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
+    this.modal.classList.remove('active');
+    this.modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('no-scroll');
+    this.clearErrors();
+    this.setMessage('', '');
+    if (this.lastFocus) this.lastFocus.focus();
   }
 
-  resetForm() {
-    if (this.formMessage) {
-      this.formMessage.textContent = '';
-      this.formMessage.className = 'form-message';
-    }
-    if (this.form) {
-      this.form.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
-      this.form.querySelectorAll('.error-message').forEach(el => el.remove());
-    }
+  setMessage(text, type) {
+    this.message.textContent = text;
+    this.message.className = 'form-message' + (type ? ' ' + type : '');
   }
 
-  validateForm() {
-    if (!this.form) return false;
-
-    let isValid = true;
-    const name = this.form.querySelector('#name');
-    const email = this.form.querySelector('#email');
-    const message = this.form.querySelector('#message');
-
-    // Reset previous errors
-    [name, email, message].forEach(field => {
-      if (field) {
-        field.classList.remove('error');
-        const errorMsg = field.nextElementSibling;
-        if (errorMsg && errorMsg.classList.contains('error-message')) {
-          errorMsg.remove();
-        }
-      }
-    });
-
-    // Validate name
-    if (name && name.value.trim().length < 2) {
-      this.showError(name, 'Please enter your name (at least 2 characters)');
-      isValid = false;
-    }
-
-    // Validate email
-    if (email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email.value.trim())) {
-        this.showError(email, 'Please enter a valid email address');
-        isValid = false;
-      }
-    }
-
-    // Validate message
-    if (message && message.value.trim().length < 10) {
-      this.showError(message, 'Please enter a message (at least 10 characters)');
-      isValid = false;
-    }
-
-    return isValid;
+  clearErrors() {
+    $$('.error', this.form).forEach(el => { el.classList.remove('error'); el.removeAttribute('aria-invalid'); });
+    $$('.error-message', this.form).forEach(el => el.remove());
   }
 
-  showError(field, message) {
-    if (!field) return;
-    
+  fieldError(field, text) {
     field.classList.add('error');
-    const errorMsg = document.createElement('div');
-    errorMsg.className = 'error-message';
-    errorMsg.textContent = message;
-    field.parentNode.insertBefore(errorMsg, field.nextSibling);
+    field.setAttribute('aria-invalid', 'true');
+    const msg = document.createElement('div');
+    msg.className = 'error-message';
+    msg.textContent = text;
+    field.after(msg);
   }
 
-  async handleSubmit(e) {
+  validate() {
+    this.clearErrors();
+    const name = $('#name', this.form);
+    const email = $('#email', this.form);
+    const body = $('#message', this.form);
+    const bad = [];
+    if (name.value.trim().length < 2) { this.fieldError(name, 'Please enter your name.'); bad.push(name); }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) { this.fieldError(email, 'Please enter a valid email address.'); bad.push(email); }
+    if (body.value.trim().length < 10) { this.fieldError(body, 'Please write a little more (at least 10 characters).'); bad.push(body); }
+    if (bad.length) bad[0].focus();
+    return !bad.length;
+  }
+
+  async submit(e) {
     e.preventDefault();
-    
-    if (!this.validateForm()) return;
-    
-    const formData = new FormData(this.form);
-    const submitButton = this.form.querySelector('button[type="submit"]');
-    
+    if (!this.validate()) return;
+
+    const btn = $('button[type="submit"]', this.form);
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
     try {
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = 'Sending...';
-      }
-      
-      // Submit to Formspree
-      const response = await fetch(this.form.action, {
+      const res = await fetch(this.form.action, {
         method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json'
-        }
+        body: new FormData(this.form),
+        headers: { Accept: 'application/json' }
       });
-      
-      if (response.ok) {
-        this.showSuccess();
-      } else {
-        throw new Error('Form submission failed');
-      }
-      
-    } catch (error) {
-      console.error('Error:', error);
-      this.showError();
-    } finally {
-      if (submitButton) {
-        submitButton.disabled = false;
-        submitButton.textContent = 'Send Message';
-      }
-    }
-  }
-
-  showSuccess() {
-    if (this.formMessage) {
-      this.formMessage.textContent = 'Message sent successfully! I\'ll get back to you soon.';
-      this.formMessage.className = 'form-message success';
-    }
-    if (this.form) {
+      if (!res.ok) throw new Error('Form submission failed');
       this.form.reset();
-    }
-    
-    // Hide the message after 5 seconds
-    setTimeout(() => {
-      if (this.formMessage) {
-        this.formMessage.textContent = '';
-        this.formMessage.className = 'form-message';
-      }
-      this.close();
-    }, 5000);
-  }
-
-  showError() {
-    if (this.formMessage) {
-      this.formMessage.textContent = 'Error sending message. Please try again or email me directly at karlkeel1@comcast.net';
-      this.formMessage.className = 'form-message error';
+      this.setMessage("Thanks! Your message is on its way — I'll get back to you soon.", 'success');
+      setTimeout(() => { if (this.modal.classList.contains('active')) this.close(); }, 4000);
+    } catch (err) {
+      console.error(err);
+      this.setMessage('Sorry, something went wrong. Please try again or email karlkeel1@comcast.net directly.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Send message';
     }
   }
 }
 
-// Gallery pagination functionality
-class GalleryPagination {
-  constructor() {
-    this.galleryGrid = $('#galleryGrid');
-    this.prevButton = $('#prevPage');
-    this.nextButton = $('#nextPage');
-    this.pageNumbers = $('#pageNumbers');
-    this.itemsPerPage = 14;
-    this.currentPage = 1;
-    this.allImages = [];
-    this.init();
-  }
-
-  init() {
-    if (!this.galleryGrid) return;
-
-    this.loadImages();
-    this.setupEventListeners();
-    this.renderGallery();
-  }
-
-  loadImages() {
-    // Gallery images configuration
-    this.allImages = [
-      { src: "featured/IMG_2784.jpg", type: 'featured' },
-      { src: "IMG_4508.jpg", type: 'regular' },
-      { src: "IMG_4717.jpg", type: 'regular' },
-      { src: "IMG_4743.jpg", type: 'regular' },
-      { src: "IMG_4775.jpg", type: 'regular' },
-      { src: "IMG_4596.jpg", type: 'regular' },
-      { src: "IMG_4720.jpg", type: 'regular' },
-      { src: "IMG_4680.jpg", type: 'regular' },
-      { src: "IMG_4801.jpg", type: 'regular' },
-      { src: "featured/IMG_0156.jpg", type: 'featured' },
-      { src: "IMG_4684.jpg", type: 'regular' },
-      { src: "IMG_4752.jpg", type: 'regular' },
-      { src: "IMG_4581.jpg", type: 'regular' },
-      { src: "IMG_4784.jpg", type: 'regular' },
-      { src: "featured/IMG_8488.jpg", type: 'featured' },
-      { src: "IMG_4629.jpg", type: 'regular' },
-      { src: "IMG_4686.jpg", type: 'regular' },
-      { src: "IMG_4727.jpg", type: 'regular' },
-      { src: "IMG_4761.jpg", type: 'regular' },
-      { src: "IMG_4785.jpg", type: 'regular' },
-      { src: "IMG_4641.jpg", type: 'regular' },
-      { src: "IMG_4688.jpg", type: 'regular' },
-      { src: "IMG_4729.jpg", type: 'regular' },
-      { src: "featured/IMG_9565.jpg", type: 'featured' },
-      { src: "IMG_4767.jpg", type: 'regular' },
-      { src: "IMG_4786.jpg", type: 'regular' },
-      { src: "IMG_4797.jpg", type: 'regular' },
-      { src: "IMG_4663.jpg", type: 'regular' },
-      { src: "IMG_4701.jpg", type: 'regular' },
-      { src: "IMG_4737.jpg", type: 'regular' },
-      { src: "IMG_4769.jpg", type: 'regular' },
-      { src: "IMG_4796.jpg", type: 'regular' },
-      { src: "featured/IMG_0181.jpg", type: 'featured' }
-    ];
-
-    // Ensure first image is featured
-    if (this.allImages[0].type !== 'featured') {
-      const featuredIndex = this.allImages.findIndex(img => img.type === 'featured');
-      if (featuredIndex > -1) {
-        const [featured] = this.allImages.splice(featuredIndex, 1);
-        this.allImages.unshift(featured);
-      }
-    }
-  }
-
-  setupEventListeners() {
-    if (this.prevButton) {
-      this.prevButton.addEventListener('click', () => this.previousPage());
-    }
-    
-    if (this.nextButton) {
-      this.nextButton.addEventListener('click', () => this.nextPage());
-    }
-  }
-
-  renderGallery() {
-    if (!this.galleryGrid) return;
-
-    this.galleryGrid.innerHTML = '';
-    
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = Math.min(startIndex + this.itemsPerPage, this.allImages.length);
-    const pageItems = this.allImages.slice(startIndex, endIndex);
-    
-    pageItems.forEach(image => {
-      const item = document.createElement('div');
-      item.className = `gallery-item ${image.type}`;
-      
-      const img = document.createElement('img');
-      img.src = `assets/images/gallery/${image.src}?v=3`;
-      img.alt = 'Pottery artwork';
-      img.loading = 'lazy';
-      
-      // Add click event for lightbox
-      img.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (window.lightbox) {
-          window.lightbox.open(img.src);
-        }
-      });
-      
-      item.appendChild(img);
-      this.galleryGrid.appendChild(item);
-    });
-
-    this.updatePagination();
-  }
-
-  updatePagination() {
-    const totalPages = Math.ceil(this.allImages.length / this.itemsPerPage);
-    
-    // Update prev/next buttons
-    if (this.prevButton) {
-      this.prevButton.disabled = this.currentPage === 1;
-    }
-    if (this.nextButton) {
-      this.nextButton.disabled = this.currentPage === totalPages;
-    }
-    
-    // Update page numbers
-    if (this.pageNumbers) {
-      this.pageNumbers.innerHTML = '';
-      const maxVisiblePages = 5;
-      let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
-      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-      
-      if (endPage - startPage + 1 < maxVisiblePages) {
-        startPage = Math.max(1, endPage - maxVisiblePages + 1);
-      }
-      
-      // Add first page and ellipsis if needed
-      if (startPage > 1) {
-        this.addPageNumber(1);
-        if (startPage > 2) {
-          const ellipsis = document.createElement('span');
-          ellipsis.textContent = '...';
-          this.pageNumbers.appendChild(ellipsis);
-        }
-      }
-      
-      // Add page numbers
-      for (let i = startPage; i <= endPage; i++) {
-        this.addPageNumber(i);
-      }
-      
-      // Add last page and ellipsis if needed
-      if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-          const ellipsis = document.createElement('span');
-          ellipsis.textContent = '...';
-          this.pageNumbers.appendChild(ellipsis);
-        }
-        this.addPageNumber(totalPages);
-      }
-    }
-  }
-
-  addPageNumber(page) {
-    const pageBtn = document.createElement('span');
-    pageBtn.textContent = page;
-    pageBtn.className = 'page-number' + (page === this.currentPage ? ' active' : '');
-    pageBtn.addEventListener('click', () => {
-      if (page !== this.currentPage) {
-        this.currentPage = page;
-        this.renderGallery();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    });
-    this.pageNumbers.appendChild(pageBtn);
-  }
-
-  previousPage() {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.renderGallery();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }
-
-  nextPage() {
-    const totalPages = Math.ceil(this.allImages.length / this.itemsPerPage);
-    if (this.currentPage < totalPages) {
-      this.currentPage++;
-      this.renderGallery();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }
+/* ------------------------------------------------------------------------ */
+/* Polish                                                                    */
+/* ------------------------------------------------------------------------ */
+function headerShadow() {
+  const header = $('.site-header');
+  if (!header) return;
+  const update = () => header.classList.toggle('scrolled', window.scrollY > 4);
+  update();
+  window.addEventListener('scroll', update, { passive: true });
 }
 
-// Initialize everything when DOM is loaded
+function revealOnScroll() {
+  const items = $$('.gallery-item');
+  if (!items.length) return;
+  if (!('IntersectionObserver' in window)) {
+    items.forEach(el => el.classList.add('in-view'));
+    return;
+  }
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin: '0px 0px -40px 0px' });
+  items.forEach(el => io.observe(el));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialize lightbox
-  window.lightbox = new Lightbox();
-  
-  // Initialize contact form
-  window.contactForm = new ContactForm();
-  
-  // Initialize gallery pagination (only on gallery page)
-  if ($('#galleryGrid')) {
-    window.galleryPagination = new GalleryPagination();
-  }
+  const lb = $('#lightbox');
+  if (lb) new Lightbox(lb);
+  new ContactForm();
+  headerShadow();
+  revealOnScroll();
+  const year = $('#year');
+  if (year) year.textContent = new Date().getFullYear();
 });
